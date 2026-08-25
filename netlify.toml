@@ -1,6 +1,5 @@
 [build]
-  base = "apps/kiosk-app"
-  command = "npm run build"
+  command = "npm --workspace=apps/kiosk-app run build"
   publish = "apps/kiosk-app/dist"
 
 [[redirects]]
