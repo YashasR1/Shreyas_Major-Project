@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans antialiased min-h-screen selection:bg-blue-200 selection:text-blue-900;
+  }
+}
+
+/* Official Clean UI Components */
+@layer components {
+  .glass-card {
+    @apply bg-white border border-gray-200 shadow-xl rounded-2xl p-6 transition-all duration-300;
+  }
+  .glass-card-hover {
+    @apply glass-card hover:border-blue-400 hover:shadow-2xl hover:-translate-y-0.5;
+  }
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center px-6 py-3 font-semibold text-white bg-blue-800 rounded-xl shadow-md hover:bg-blue-900 hover:shadow-lg active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 font-medium text-blue-800 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-300 active:scale-95 transition-all duration-200;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.98); }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s infinite ease-in-out;
+}

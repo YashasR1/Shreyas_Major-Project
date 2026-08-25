@@ -1,0 +1,12 @@
+{
+  "name": "smart-ration-platform",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:mobile": "npm --workspace=apps/mobile-app run dev",
+    "dev:kiosk": "npm --workspace=apps/kiosk-app run dev",
+    "test:mobile": "npm --workspace=apps/mobile-app run test"
+  }
+}
