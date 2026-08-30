@@ -11,8 +11,8 @@
 #include <ArduinoJson.h>
 
 // ---------- Network & Supabase Config ----------
-const char* WIFI_SSID = "Ramamurthy's F15";
-const char* WIFI_PASSWORD = "rama@12321";
+const char* WIFI_SSID = "Yashas's F41";
+const char* WIFI_PASSWORD = "LKJHGFDSA";
 
 // Add your Supabase Project URL and Anon Key here
 const char* SUPABASE_URL = "https://svuzznupaozcjvtederc.supabase.co/rest/v1/inventory?item_name=eq.Subsidized%20Rice";
@@ -39,7 +39,7 @@ float calibration_factor = -650.0;  // Calibrated load cell factor
 float currentWeight = 0.0;
 float smoothedWeight = 0.0;
 float targetWeight = 100.0;         // Target: 100g quota
-float cutoffOffset = 10.0;          // Pre-close offset for grains in flight (90g - 100g range)
+float cutoffOffset = 2.0;           // Strict cut-off: triggers gate close at 98.0g (lands at 98g - 102g)
 float currentDbQuantity = 0.0;
 String inventoryRowId = "";
 
@@ -461,10 +461,14 @@ void executePhysicalDispense(const char* label) {
     lcd.print((int)smoothedWeight);
     lcd.print("g / 100g    ");
 
-    // Check if within target cutoff range (e.g. >= 90g) or safety timeout (20s)
-    if (smoothedWeight >= cutoffWeight || (millis() - startTime > 20000)) {
+    // Check if within strict target cutoff (>= 98.0g) or safety timeout (15s)
+    if (smoothedWeight >= cutoffWeight) {
       dispenser.write(0); // Close gate immediately
-      Serial.println("Target Reached or Timeout -> Gate Closed to 0°");
+      Serial.println("Target (100g) Reached ✅ - Gate Closed to 0°");
+      targetReached = true;
+    } else if (millis() - startTime > 15000) { // 15-second safety watchdog
+      dispenser.write(0); // Emergency/Safety close gate
+      Serial.println("⚠️ Safety Timeout (15s) Triggered! Gate Closed to 0°");
       targetReached = true;
     }
     delay(80);
@@ -477,12 +481,16 @@ void executePhysicalDispense(const char* label) {
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Dispense Done!");
+  if (finalWeight >= 95.0) {
+    lcd.print("Dispense Done!");
+  } else {
+    lcd.print("Timeout / Partial");
+  }
   lcd.setCursor(0, 1);
   lcd.print("Net: ");
   lcd.print((int)finalWeight);
   lcd.print(" g");
-  delay(2000);
+  delay(2500);
 
   digitalWrite(GREEN_LED, LOW);
   showIdleScreen();
