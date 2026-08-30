@@ -5,14 +5,44 @@
 #include <MFRC522.h>
 #include "HX711.h"
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ArduinoJson.h>
 
-// ---------- Network & Supabase Config ----------
-const char* WIFI_SSID = "Yashas's F41";
-const char* WIFI_PASSWORD = "LKJHGFDSA";
+// ---------- Multi-Wi-Fi Network Configuration ----------
+WiFiMulti wifiMulti;
+
+struct WiFiCredential {
+  const char* ssid;
+  const char* password;
+};
+
+// Add 2-3 hotspots or Wi-Fis here. ESP32 will auto-connect to whichever is active!
+const WiFiCredential KNOWN_NETWORKS[] = {
+  {"Yashas's F41", "LKJHGFDSA"},         // Network 1 (Primary Hotspot)
+  {"Ramamurthy's F15", "rama@12321"},     // Network 2 (Friend's Hotspot)
+  {"College_WiFi", "password123"}         // Network 3 (College / Home Wi-Fi)
+};
+const int NUM_NETWORKS = sizeof(KNOWN_NETWORKS) / sizeof(KNOWN_NETWORKS[0]);
+
+// ---------- Authorized RFID Whitelist Configuration ----------
+// Put your valid RFID card UIDs here. Any other card will be REJECTED with "Access Denied"!
+const String AUTHORIZED_RFIDS[] = {
+  "93 3B 2A 1A",  // Replace with your valid card UID (scanned on Serial/LCD)
+  "B4 5C 8E 2F"   // Optional 2nd authorized card UID
+};
+const int NUM_AUTHORIZED_CARDS = sizeof(AUTHORIZED_RFIDS) / sizeof(AUTHORIZED_RFIDS[0]);
+
+bool isCardAuthorized(String scannedUid) {
+  for (int i = 0; i < NUM_AUTHORIZED_CARDS; i++) {
+    if (scannedUid.equalsIgnoreCase(AUTHORIZED_RFIDS[i])) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // Add your Supabase Project URL and Anon Key here
 const char* SUPABASE_URL = "https://svuzznupaozcjvtederc.supabase.co/rest/v1/inventory?item_name=eq.Subsidized%20Rice";
@@ -131,34 +161,39 @@ void setup() {
   digitalWrite(GREEN_LED, LOW);
   digitalWrite(RED_LED, LOW);
 
-  // Connect Wi-Fi
+  // Connect Multi-Wi-Fi (Auto-selects whichever network is active in range)
   Serial.print("Connecting to Wi-Fi");
   lcd.clear();
-  lcd.print("Connecting WiFi");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  lcd.print("Scanning WiFi...");
+
+  for (int i = 0; i < NUM_NETWORKS; i++) {
+    wifiMulti.addAP(KNOWN_NETWORKS[i].ssid, KNOWN_NETWORKS[i].password);
+    Serial.print("\nRegistered Network: ");
+    Serial.println(KNOWN_NETWORKS[i].ssid);
+  }
+
   int wifiAttempts = 0;
-  
-  while (WiFi.status() != WL_CONNECTED && wifiAttempts < 20) {
+  while (wifiMulti.run() != WL_CONNECTED && wifiAttempts < 30) {
     delay(500);
     Serial.print(".");
     wifiAttempts++;
   }
   
   if(WiFi.status() != WL_CONNECTED) {
-    Serial.println("\n[ERROR] Wi-Fi Connection Failed!");
+    Serial.println("\n[ERROR] None of the registered Wi-Fi networks connected!");
     lcd.clear();
     lcd.print("WiFi Error!");
     digitalWrite(RED_LED, HIGH);
     while(1); // Halt system if no Wi-Fi
   }
   
-  Serial.println("\nWi-Fi Connected ✅");
+  Serial.println("\nWi-Fi Connected ✅ to: " + WiFi.SSID());
   Serial.print("ESP32 IP Address: http://");
   Serial.println(WiFi.localIP());
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("WiFi Connected");
+  lcd.print("WiFi: " + WiFi.SSID().substring(0, 10));
   lcd.setCursor(0, 1);
   lcd.print(WiFi.localIP().toString());
   delay(2500);
@@ -286,6 +321,9 @@ void checkCloudDispenseQueue() {
 
 // ---------- Main Loop ----------
 void loop() {
+  // Maintain Multi-Wi-Fi connection automatically
+  wifiMulti.run();
+
   // 1. Check Cloud Dispense Queue from Supabase (Bypasses all Wi-Fi isolation)
   checkCloudDispenseQueue();
 
@@ -303,15 +341,43 @@ void loop() {
     }
     uid.toUpperCase();
     Serial.println("\n--- New Card Scanned ---");
-    Serial.println("Detected UID: " + uid);
+    Serial.println("Detected UID: [" + uid + "]");
 
-    // Start verification & dispensing
-    verifyAndDispense();
+    // Check if card is on the authorized whitelist
+    if (isCardAuthorized(uid)) {
+      Serial.println("Result: Card Authorized! ✅ Proceeding to dispense...");
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Card Authorized!");
+      lcd.setCursor(0, 1);
+      lcd.print("Authenticating..");
+      
+      digitalWrite(GREEN_LED, HIGH);
+      digitalWrite(RED_LED, LOW);
+      delay(1000);
+
+      // Start verification & dispensing
+      verifyAndDispense();
+    } else {
+      Serial.println("Result: Access Denied ❌ - Unauthorized Card UID: [" + uid + "]");
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Access Denied!");
+      lcd.setCursor(0, 1);
+      lcd.print("UID:" + uid);
+
+      digitalWrite(RED_LED, HIGH);
+      digitalWrite(GREEN_LED, LOW);
+      delay(2500);
+
+      digitalWrite(RED_LED, LOW);
+      showIdleScreen();
+    }
 
     // Stop RFID communication
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
-    delay(1000);
+    delay(500);
   }
 }
 
