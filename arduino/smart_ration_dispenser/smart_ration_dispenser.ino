@@ -37,7 +37,6 @@ WebServer server(80);
 // ---------- Variables ----------
 float calibration_factor = -650.0;  // Calibrated load cell factor
 float currentWeight = 0.0;
-float smoothedWeight = 0.0;
 float targetWeight = 100.0;         // Target: 100g quota
 float cutoffOffset = 2.0;           // Strict cut-off: triggers gate close at 98.0g (lands at 98g - 102g)
 float currentDbQuantity = 0.0;
@@ -467,7 +466,7 @@ void executePhysicalDispense(const char* label) {
       Serial.println("Target (100g) Reached ✅ - Gate Closed to 0°");
       targetReached = true;
     } else if (millis() - startTime > 15000) { // 15-second safety watchdog
-      dispenser.write(0); // Emergency/Safety close gate
+      dispenser.write(0); // Safety auto-close gate
       Serial.println("⚠️ Safety Timeout (15s) Triggered! Gate Closed to 0°");
       targetReached = true;
     }
@@ -484,7 +483,7 @@ void executePhysicalDispense(const char* label) {
   if (finalWeight >= 95.0) {
     lcd.print("Dispense Done!");
   } else {
-    lcd.print("Timeout / Partial");
+    lcd.print("Timeout/LowGrain");
   }
   lcd.setCursor(0, 1);
   lcd.print("Net: ");
