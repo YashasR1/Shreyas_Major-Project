@@ -21,8 +21,8 @@ struct WiFiCredential {
 
 // Add 2-3 hotspots or Wi-Fis here. ESP32 will auto-connect to whichever is active!
 const WiFiCredential KNOWN_NETWORKS[] = {
-  {"Yashas's F41", "LKJHGFDSA"},         // Network 1 (Primary Hotspot)
-  {"Ramamurthy's F15", "rama@12321"},     // Network 2 (Friend's Hotspot)
+  {"", ""},         // Network 1 (Primary Hotspot)
+  {"", ""},     // Network 2 (Friend's Hotspot)
   {"College_WiFi", "password123"}         // Network 3 (College / Home Wi-Fi)
 };
 const int NUM_NETWORKS = sizeof(KNOWN_NETWORKS) / sizeof(KNOWN_NETWORKS[0]);
@@ -359,12 +359,12 @@ void loop() {
       // Start verification & dispensing
       verifyAndDispense();
     } else {
-      Serial.println("Result: Access Denied ❌ - Unauthorized Card UID: [" + uid + "]");
+      Serial.println("Result: Access Denied ❌ - Unauthorized Card UID");
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Access Denied!");
       lcd.setCursor(0, 1);
-      lcd.print("UID:" + uid);
+      lcd.print("Unauthorized");
 
       digitalWrite(RED_LED, HIGH);
       digitalWrite(GREEN_LED, LOW);
