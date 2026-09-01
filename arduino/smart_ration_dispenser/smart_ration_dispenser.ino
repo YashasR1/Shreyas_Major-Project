@@ -5,25 +5,14 @@
 #include <MFRC522.h>
 #include "HX711.h"
 #include <WiFi.h>
-#include <WiFiMulti.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ArduinoJson.h>
 
-// ---------- Multi-Wi-Fi Network Configuration ----------
-WiFiMulti wifiMulti;
-
-struct WiFiCredential {
-  const char* ssid;
-  const char* password;
-};
-
-// Add 2-3 hotspots or Wi-Fis here. ESP32 will auto-connect to whichever is active!
-const WiFiCredential KNOWN_NETWORKS[] = {
-  {"shreyas", "1234567890"}         // Network 3 (College / Home Wi-Fi)
-};
-const int NUM_NETWORKS = sizeof(KNOWN_NETWORKS) / sizeof(KNOWN_NETWORKS[0]);
+// ---------- Wi-Fi Hotspot Configuration ----------
+const char* WIFI_SSID = "shreyas";
+const char* WIFI_PASSWORD = "1234567890";
 
 // ---------- Authorized RFID Whitelist Configuration ----------
 // Put your valid RFID card UIDs here. Any other card will be REJECTED with "Access Denied"!
@@ -159,75 +148,37 @@ void setup() {
   digitalWrite(GREEN_LED, LOW);
   digitalWrite(RED_LED, LOW);
 
-  // ---------- Bulletproof Multi-Wi-Fi Connection ----------
-  WiFi.mode(WIFI_STA);       // Explicit Station mode (Mandatory on ESP32)
-  WiFi.disconnect(true);     // Clean reset of stale connections
-  WiFi.setSleep(false);      // Disable Wi-Fi modem sleep (Prevents hotspot dropouts)
-  delay(100);
-
-  Serial.println("\n--- Initializing Multi-Wi-Fi Connection ---");
+  // ---------- Direct Single Hotspot Connection ----------
+  Serial.print("Connecting to Wi-Fi: ");
+  Serial.println(WIFI_SSID);
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Connecting WiFi");
+  lcd.setCursor(0, 1);
+  lcd.print(WIFI_SSID);
 
-  bool connected = false;
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  int wifiAttempts = 0;
 
-  // Try each registered network sequentially for fast & reliable connection
-  for (int i = 0; i < NUM_NETWORKS; i++) {
-    if (strlen(KNOWN_NETWORKS[i].ssid) == 0) continue; // Skip empty entries
-
-    Serial.print("Attempting connection to: ");
-    Serial.println(KNOWN_NETWORKS[i].ssid);
-
-    lcd.setCursor(0, 1);
-    lcd.print(String(KNOWN_NETWORKS[i].ssid).substring(0, 16));
-
-    WiFi.begin(KNOWN_NETWORKS[i].ssid, KNOWN_NETWORKS[i].password);
-
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 15) { // 7.5 seconds per network
-      delay(500);
-      Serial.print(".");
-      attempts++;
-    }
-
-    if (WiFi.status() == WL_CONNECTED) {
-      connected = true;
-      break;
-    }
-    Serial.println(" [Failed/Not in range]");
-    WiFi.disconnect(true);
-    delay(200);
+  while (WiFi.status() != WL_CONNECTED && wifiAttempts < 30) {
+    delay(500);
+    Serial.print(".");
+    wifiAttempts++;
   }
 
-  // If sequential didn't connect, try WiFiMulti scan as secondary fallback
-  if (!connected) {
-    for (int i = 0; i < NUM_NETWORKS; i++) {
-      if (strlen(KNOWN_NETWORKS[i].ssid) > 0) {
-        wifiMulti.addAP(KNOWN_NETWORKS[i].ssid, KNOWN_NETWORKS[i].password);
-      }
-    }
-    int multiAttempts = 0;
-    while (wifiMulti.run() != WL_CONNECTED && multiAttempts < 10) {
-      delay(500);
-      Serial.print("*");
-      multiAttempts++;
-    }
-    connected = (WiFi.status() == WL_CONNECTED);
-  }
-  
-  if (!connected) {
-    Serial.println("\n[ERROR] None of the registered Wi-Fi networks connected!");
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("\n[ERROR] Wi-Fi Connection Failed!");
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("WiFi Failed!");
     lcd.setCursor(0, 1);
     lcd.print("Check Hotspot");
     digitalWrite(RED_LED, HIGH);
-    while(1); // Halt system if no Wi-Fi
+    while (1); // Halt system if no Wi-Fi
   }
-  
-  Serial.println("\nWi-Fi Connected ✅ to: " + WiFi.SSID());
+
+  Serial.println("\nWi-Fi Connected ✅ to: " + String(WIFI_SSID));
   Serial.print("ESP32 IP Address: http://");
   Serial.println(WiFi.localIP());
 
@@ -361,9 +312,6 @@ void checkCloudDispenseQueue() {
 
 // ---------- Main Loop ----------
 void loop() {
-  // Maintain Multi-Wi-Fi connection automatically
-  wifiMulti.run();
-
   // 1. Check Cloud Dispense Queue from Supabase (Bypasses all Wi-Fi isolation)
   checkCloudDispenseQueue();
 
