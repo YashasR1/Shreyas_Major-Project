@@ -21,7 +21,7 @@ struct WiFiCredential {
 
 // Add 2-3 hotspots or Wi-Fis here. ESP32 will auto-connect to whichever is active!
 const WiFiCredential KNOWN_NETWORKS[] = {
-  {"", ""},         // Network 1 (Primary Hotspot)
+  {"shreyas", "1234567890"},         // Network 1 (Primary Hotspot)
   {"", ""},     // Network 2 (Friend's Hotspot)
   {"College_WiFi", "password123"}         // Network 3 (College / Home Wi-Fi)
 };
@@ -30,8 +30,7 @@ const int NUM_NETWORKS = sizeof(KNOWN_NETWORKS) / sizeof(KNOWN_NETWORKS[0]);
 // ---------- Authorized RFID Whitelist Configuration ----------
 // Put your valid RFID card UIDs here. Any other card will be REJECTED with "Access Denied"!
 const String AUTHORIZED_RFIDS[] = {
-  "93 3B 2A 1A",  // Replace with your valid card UID (scanned on Serial/LCD)
-  "B4 5C 8E 2F"   // Optional 2nd authorized card UID
+  "93 3B 2A 1A"  // Replace with your valid card UID (scanned on Serial/LCD)
 };
 const int NUM_AUTHORIZED_CARDS = sizeof(AUTHORIZED_RFIDS) / sizeof(AUTHORIZED_RFIDS[0]);
 
@@ -67,6 +66,7 @@ WebServer server(80);
 // ---------- Variables ----------
 float calibration_factor = -650.0;  // Calibrated load cell factor
 float currentWeight = 0.0;
+float smoothedWeight = 0.0;
 float targetWeight = 100.0;         // Target: 100g quota
 float cutoffOffset = 2.0;           // Strict cut-off: triggers gate close at 98.0g (lands at 98g - 102g)
 float currentDbQuantity = 0.0;
