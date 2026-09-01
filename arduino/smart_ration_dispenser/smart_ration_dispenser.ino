@@ -21,9 +21,7 @@ struct WiFiCredential {
 
 // Add 2-3 hotspots or Wi-Fis here. ESP32 will auto-connect to whichever is active!
 const WiFiCredential KNOWN_NETWORKS[] = {
-  {"shreyas", "1234567890"},         // Network 1 (Primary Hotspot)
-  {"", ""},     // Network 2 (Friend's Hotspot)
-  {"College_WiFi", "password123"}         // Network 3 (College / Home Wi-Fi)
+  {"shreyas", "1234567890"}         // Network 3 (College / Home Wi-Fi)
 };
 const int NUM_NETWORKS = sizeof(KNOWN_NETWORKS) / sizeof(KNOWN_NETWORKS[0]);
 
@@ -161,28 +159,70 @@ void setup() {
   digitalWrite(GREEN_LED, LOW);
   digitalWrite(RED_LED, LOW);
 
-  // Connect Multi-Wi-Fi (Auto-selects whichever network is active in range)
-  Serial.print("Connecting to Wi-Fi");
-  lcd.clear();
-  lcd.print("Scanning WiFi...");
+  // ---------- Bulletproof Multi-Wi-Fi Connection ----------
+  WiFi.mode(WIFI_STA);       // Explicit Station mode (Mandatory on ESP32)
+  WiFi.disconnect(true);     // Clean reset of stale connections
+  WiFi.setSleep(false);      // Disable Wi-Fi modem sleep (Prevents hotspot dropouts)
+  delay(100);
 
+  Serial.println("\n--- Initializing Multi-Wi-Fi Connection ---");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Connecting WiFi");
+
+  bool connected = false;
+
+  // Try each registered network sequentially for fast & reliable connection
   for (int i = 0; i < NUM_NETWORKS; i++) {
-    wifiMulti.addAP(KNOWN_NETWORKS[i].ssid, KNOWN_NETWORKS[i].password);
-    Serial.print("\nRegistered Network: ");
+    if (strlen(KNOWN_NETWORKS[i].ssid) == 0) continue; // Skip empty entries
+
+    Serial.print("Attempting connection to: ");
     Serial.println(KNOWN_NETWORKS[i].ssid);
+
+    lcd.setCursor(0, 1);
+    lcd.print(String(KNOWN_NETWORKS[i].ssid).substring(0, 16));
+
+    WiFi.begin(KNOWN_NETWORKS[i].ssid, KNOWN_NETWORKS[i].password);
+
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 15) { // 7.5 seconds per network
+      delay(500);
+      Serial.print(".");
+      attempts++;
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+      connected = true;
+      break;
+    }
+    Serial.println(" [Failed/Not in range]");
+    WiFi.disconnect(true);
+    delay(200);
   }
 
-  int wifiAttempts = 0;
-  while (wifiMulti.run() != WL_CONNECTED && wifiAttempts < 30) {
-    delay(500);
-    Serial.print(".");
-    wifiAttempts++;
+  // If sequential didn't connect, try WiFiMulti scan as secondary fallback
+  if (!connected) {
+    for (int i = 0; i < NUM_NETWORKS; i++) {
+      if (strlen(KNOWN_NETWORKS[i].ssid) > 0) {
+        wifiMulti.addAP(KNOWN_NETWORKS[i].ssid, KNOWN_NETWORKS[i].password);
+      }
+    }
+    int multiAttempts = 0;
+    while (wifiMulti.run() != WL_CONNECTED && multiAttempts < 10) {
+      delay(500);
+      Serial.print("*");
+      multiAttempts++;
+    }
+    connected = (WiFi.status() == WL_CONNECTED);
   }
   
-  if(WiFi.status() != WL_CONNECTED) {
+  if (!connected) {
     Serial.println("\n[ERROR] None of the registered Wi-Fi networks connected!");
     lcd.clear();
-    lcd.print("WiFi Error!");
+    lcd.setCursor(0, 0);
+    lcd.print("WiFi Failed!");
+    lcd.setCursor(0, 1);
+    lcd.print("Check Hotspot");
     digitalWrite(RED_LED, HIGH);
     while(1); // Halt system if no Wi-Fi
   }
@@ -193,10 +233,10 @@ void setup() {
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("WiFi: " + WiFi.SSID().substring(0, 10));
+  lcd.print("WiFi Connected");
   lcd.setCursor(0, 1);
   lcd.print(WiFi.localIP().toString());
-  delay(2500);
+  delay(2000);
 
   // Start HTTP Server on port 80
   server.on("/dispense", HTTP_GET, handleWebDispense);
