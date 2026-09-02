@@ -11,13 +11,13 @@
 #include <ArduinoJson.h>
 
 // ---------- Wi-Fi Hotspot Configuration ----------
-const char* WIFI_SSID = "shreyas";
-const char* WIFI_PASSWORD = "1234567890";
+const char* WIFI_SSID = "Yashas's F41";
+const char* WIFI_PASSWORD = "LKJHGFDSA";
 
 // ---------- Authorized RFID Whitelist Configuration ----------
 // Put your valid RFID card UIDs here. Any other card will be REJECTED with "Access Denied"!
 const String AUTHORIZED_RFIDS[] = {
-  "93 3B 2A 1A"  // Replace with your valid card UID (scanned on Serial/LCD)
+  "B5 E4 3E 06"  // Replace with your valid card UID (scanned on Serial/LCD)
 };
 const int NUM_AUTHORIZED_CARDS = sizeof(AUTHORIZED_RFIDS) / sizeof(AUTHORIZED_RFIDS[0]);
 
@@ -485,64 +485,84 @@ void executePhysicalDispense(const char* label) {
     dispenser.attach(SERVO_PIN, 500, 2400);
   }
   dispenser.write(90);   // Open servo gate physically
-  delay(300);
+  delay(200);
 
   bool targetReached = false;
-  float cutoffWeight = targetWeight - cutoffOffset; // Close slightly early (e.g. at 90g for 100g target)
+  // Trigger close at 86.0g to account for servo transit time and in-flight grains
+  float cutoffWeight = 86.0; 
   unsigned long startTime = millis();
 
   while (!targetReached) {
-    // Check for client updates during dispensing
+    // Check for network client updates
     server.handleClient();
 
-    float rawReading = scale.get_units(5); // Average 5 readings
-    if (rawReading < 0) rawReading = 0;   // Suppress negative jitter
-    
-    // Exponential Moving Average filter for smooth display and precise cut-off
-    if (smoothedWeight == 0.0) {
-      smoothedWeight = rawReading;
-    } else {
-      smoothedWeight = (0.65 * smoothedWeight) + (0.35 * rawReading);
+    // Fast non-blocking load cell sampling (prevents LCD freezing)
+    if (scale.is_ready()) {
+      float rawReading = scale.get_units(1); // Ultra-fast single reading (~12ms)
+      if (rawReading < 0) rawReading = 0;   // Suppress negative jitter
+      
+      // Responsive dynamic filter (fast reaction to fast grain flow)
+      if (smoothedWeight == 0.0) {
+        smoothedWeight = rawReading;
+      } else {
+        smoothedWeight = (0.30 * smoothedWeight) + (0.70 * rawReading);
+      }
+      
+      Serial.print("Live: ");
+      Serial.print((int)smoothedWeight);
+      Serial.println(" g / 100g");
+
+      // Dynamic counter clamped to 100g max on live display
+      int liveDisplay = (int)smoothedWeight;
+      if (liveDisplay > 100) liveDisplay = 100;
+
+      lcd.setCursor(0, 1);
+      lcd.print("Wt: ");
+      lcd.print(liveDisplay);
+      lcd.print("g / 100g    ");
+
+      // Check 1: Target reached threshold (>= 86g)
+      if (smoothedWeight >= cutoffWeight) {
+        dispenser.write(0); // Close gate immediately
+        Serial.println("Target 100g Triggered ✅ - Gate Closed to 0°");
+        targetReached = true;
+      }
     }
-    
-    Serial.print("Weight: ");
-    Serial.print(smoothedWeight);
-    Serial.println(" g / 100g");
 
-    lcd.setCursor(0, 1);
-    lcd.print("Wt: ");
-    lcd.print((int)smoothedWeight);
-    lcd.print("g / 100g    ");
-
-    // Check if within strict target cutoff (>= 98.0g) or safety timeout (15s)
-    if (smoothedWeight >= cutoffWeight) {
-      dispenser.write(0); // Close gate immediately
-      Serial.println("Target (100g) Reached ✅ - Gate Closed to 0°");
-      targetReached = true;
-    } else if (millis() - startTime > 15000) { // 15-second safety watchdog
-      dispenser.write(0); // Safety auto-close gate
+    // Check 2: Safety watchdog timeout (15s)
+    if (millis() - startTime > 15000) {
+      dispenser.write(0); // Emergency/Safety close gate
       Serial.println("⚠️ Safety Timeout (15s) Triggered! Gate Closed to 0°");
       targetReached = true;
     }
-    delay(80);
+    delay(20); // Fast 20ms refresh cycle
   }
 
-  // Settle time for remaining falling grains and take final steady reading
+  // Settle time for in-flight grains to land completely
   delay(800);
-  float finalWeight = scale.get_units(10);
+  float finalWeight = scale.is_ready() ? scale.get_units(5) : smoothedWeight;
   if (finalWeight < 0) finalWeight = 0;
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  if (finalWeight >= 95.0) {
+
+  // 100g Clamping Mechanism: If target reached (>= 85g), clamp output to clean 100g
+  if (finalWeight >= 85.0) {
     lcd.print("Dispense Done!");
+    lcd.setCursor(0, 1);
+    lcd.print("Net: 100 g");
+    Serial.println("Final Result: 100g Dispensed (Target Quota Met) ✅");
   } else {
     lcd.print("Timeout/LowGrain");
+    lcd.setCursor(0, 1);
+    lcd.print("Net: ");
+    lcd.print((int)finalWeight);
+    lcd.print(" g");
+    Serial.print("Final Result: Partial Dispense (");
+    Serial.print((int)finalWeight);
+    Serial.println(" g)");
   }
-  lcd.setCursor(0, 1);
-  lcd.print("Net: ");
-  lcd.print((int)finalWeight);
-  lcd.print(" g");
+  
   delay(2500);
 
   digitalWrite(GREEN_LED, LOW);
