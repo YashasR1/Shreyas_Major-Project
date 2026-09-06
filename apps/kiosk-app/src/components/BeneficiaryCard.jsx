@@ -185,7 +185,7 @@ export default function BeneficiaryCard({ user: initialUser, onResetSearch }) {
 
     try {
       let hardwareTriggered = false;
-      
+
       // 1. Send physical trigger signal to ESP32 via HTTP
       if (esp32Ip.trim()) {
         const cleanIp = esp32Ip.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
@@ -204,8 +204,8 @@ export default function BeneficiaryCard({ user: initialUser, onResetSearch }) {
       // 2. Record distribution claim in bookings table
       if (user.is_demo) {
         setTimeout(() => {
-          setClaimStatus(hardwareTriggered 
-            ? '✅ Hardware Signal Dispatched! ESP32 valve opening to dispense 100g...' 
+          setClaimStatus(hardwareTriggered
+            ? '✅ Hardware Signal Dispatched! ESP32 valve opening to dispense 100g...'
             : 'Rations claim recorded! (Connect ESP32 IP to trigger physical valve)');
           setMonthlyClaims([{ id: 'demo-claim-1', claimed_at: new Date().toISOString() }]);
           setLoadingClaim(false);
@@ -229,8 +229,8 @@ export default function BeneficiaryCard({ user: initialUser, onResetSearch }) {
 
       if (!insertError) {
         setMonthlyClaims(prev => [newClaim || { claimed_at: new Date().toISOString() }, ...prev]);
-        setClaimStatus(hardwareTriggered 
-          ? '✅ Dispense Signal Dispatched! ESP32 valve opening to dispense 100g...' 
+        setClaimStatus(hardwareTriggered
+          ? '✅ Dispense Signal Dispatched! ESP32 valve opening to dispense 100g...'
           : '✅ Quota deducted and claim logged in database!');
       } else {
         throw insertError;
@@ -347,7 +347,7 @@ export default function BeneficiaryCard({ user: initialUser, onResetSearch }) {
                 }`}
             >
               <ScanFace className="w-4 h-4" />
-              <span>{hasFace ? 'Recapture / Update Face Vector' : 'Activate WebCam & Capture Face'}</span>
+              <span>{hasFace ? 'Recapture / Update Face' : 'Activate WebCam & Capture Face'}</span>
             </button>
           </div>
 
@@ -397,11 +397,10 @@ export default function BeneficiaryCard({ user: initialUser, onResetSearch }) {
       </div>
 
       {/* Rations Monthly Quota & Distribution Dispensing Bar */}
-      <div className={`p-6 rounded-2xl border transition-all ${
-        hasClaimedThisMonth 
-          ? 'bg-amber-50/70 border-amber-200 shadow-sm' 
-          : isBiometricVerified 
-          ? 'bg-blue-50 border-blue-200 shadow-sm' 
+      <div className={`p-6 rounded-2xl border transition-all ${hasClaimedThisMonth
+        ? 'bg-amber-50/70 border-amber-200 shadow-sm'
+        : isBiometricVerified
+          ? 'bg-blue-50 border-blue-200 shadow-sm'
           : 'bg-gray-100 border-gray-200 opacity-80'
         }`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -428,21 +427,20 @@ export default function BeneficiaryCard({ user: initialUser, onResetSearch }) {
               {hasClaimedThisMonth
                 ? `Beneficiary has already claimed their monthly quota on ${new Date(monthlyClaims[0].claimed_at).toLocaleDateString()}. Next allotment next month.`
                 : isBiometricVerified
-                ? 'Biometrics verified. Ready for automatic or manual distribution.'
-                : 'Biometrics pending. Please capture Face ID or Fingerprint first to enable dispensing.'}
+                  ? 'Biometrics verified. Ready for automatic or manual distribution.'
+                  : 'Biometrics pending. Please capture Face ID or Fingerprint first to enable dispensing.'}
             </p>
           </div>
 
           <button
             onClick={handleProcessDistribution}
             disabled={!isBiometricVerified || hasClaimedThisMonth || loadingClaim}
-            className={`px-8 py-3.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 shadow-sm ${
-              hasClaimedThisMonth
-                ? 'bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300'
-                : isBiometricVerified
+            className={`px-8 py-3.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 shadow-sm ${hasClaimedThisMonth
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300'
+              : isBiometricVerified
                 ? 'bg-blue-700 hover:bg-blue-800 text-white'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300'
-            }`}
+              }`}
           >
             {loadingClaim ? (
               <span>Dispensing Rations...</span>
@@ -470,9 +468,6 @@ export default function BeneficiaryCard({ user: initialUser, onResetSearch }) {
               className="px-3 py-1 bg-white border border-gray-300 rounded-lg font-mono text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 w-40"
             />
           </div>
-          <span className="text-gray-500 italic">
-            (IP shown on LCD/Serial Monitor when ESP32 connects to Wi-Fi)
-          </span>
         </div>
 
         {claimStatus && (

@@ -1,22 +1,14 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Globe2 } from 'lucide-react';
-
-const LANGUAGES = [
-  { id: 'en', name: 'English', native: 'English' },
-  { id: 'hi', name: 'Hindi', native: 'हिन्दी' },
-  { id: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
-  { id: 'ta', name: 'Tamil', native: 'தமிழ்' },
-  { id: 'te', name: 'Telugu', native: 'తెలుగు' },
-  { id: 'mr', name: 'Marathi', native: 'मराठी' },
-  { id: 'ml', name: 'Malayalam', native: 'മലയാളം' },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function LanguageSelectionScreen({ onLanguageSelect }) {
-  const [selected, setSelected] = useState('en');
+  const { language, setLanguage, languages, t } = useLanguage();
+  const [selected, setSelected] = useState(language || 'en');
 
   const handleContinue = () => {
-    // Pass the selected language code back to the parent to store it
-    onLanguageSelect(selected);
+    setLanguage(selected);
+    onLanguageSelect?.(selected);
   };
 
   return (
@@ -35,16 +27,16 @@ export default function LanguageSelectionScreen({ onLanguageSelect }) {
         {/* Header */}
         <div className="mt-8 mb-8 sm:mt-2 text-center drop-shadow-[0_0_10px_rgba(255,255,255,0.9)]">
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-            Select Language
+            {t('selectLanguage', 'Select Language')}
           </h1>
           <p className="text-gray-800 text-sm mt-2 font-bold">
-            Please choose your preferred language.
+            {t('choosePreferredLang', 'Please choose your preferred language.')}
           </p>
         </div>
 
         {/* Language Cards Scrollable List */}
         <div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {LANGUAGES.map((item) => {
+          {languages.map((item) => {
             const isSelected = selected === item.id;
             return (
               <button
@@ -84,7 +76,7 @@ export default function LanguageSelectionScreen({ onLanguageSelect }) {
             onClick={handleContinue}
             className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-[17px] shadow-[0_8px_30px_rgb(59,130,246,0.3)] hover:shadow-[0_8px_30px_rgb(59,130,246,0.5)] transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
           >
-            Continue
+            {t('continueBtn', 'Continue')}
           </button>
         </div>
         

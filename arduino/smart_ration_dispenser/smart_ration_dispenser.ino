@@ -11,8 +11,8 @@
 #include <ArduinoJson.h>
 
 // ---------- Wi-Fi Hotspot Configuration ----------
-const char* WIFI_SSID = "Yashas's F41";
-const char* WIFI_PASSWORD = "LKJHGFDSA";
+const char* WIFI_SSID = "ssk";
+const char* WIFI_PASSWORD = "1234567890";
 
 // ---------- Authorized RFID Whitelist Configuration ----------
 // Put your valid RFID card UIDs here. Any other card will be REJECTED with "Access Denied"!

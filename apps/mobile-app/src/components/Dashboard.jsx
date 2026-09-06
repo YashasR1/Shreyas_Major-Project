@@ -5,8 +5,10 @@ import {
   ShieldCheck, AlertTriangle, Fingerprint, ScanFace,
   RefreshCw, Clock, PackageCheck, ExternalLink, Activity, Info, Bell, Sparkles, Send
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Dashboard({ user, onUserUpdated, onNavigateToBookings }) {
+  const { t } = useLanguage();
   const [currentUser, setCurrentUser] = useState(user);
   const [recentClaims, setRecentClaims] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -185,7 +187,7 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
           title="Refresh database sync"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Sync</span>
+          <span>{t('syncBtn', 'Sync')}</span>
         </button>
       </div>
 
@@ -199,7 +201,7 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-xs font-mono mb-3">
               <Activity className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
-              <span>DIGITAL SMART RATION CARD</span>
+              <span>{t('digitalCardBadge', 'DIGITAL SMART RATION CARD')}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
               {currentUser?.name || 'Beneficiary Card'}
@@ -214,17 +216,17 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
           {/* Biometrics Verification Status Badge */}
           <div className="flex flex-col items-start md:items-end">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
-              Verification Status
+              {t('verificationStatus', 'Verification Status')}
             </span>
             {isBiometricsVerified ? (
               <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-green-50 border border-green-200 text-green-700 font-bold shadow-sm transition-all">
                 <ShieldCheck className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="tracking-wide">Biometrics Verified</span>
+                <span className="tracking-wide">{t('verified', 'Biometrics Verified')}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 font-bold shadow-sm animate-pulse-subtle">
                 <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
-                <span className="tracking-wide">Pending Biometrics</span>
+                <span className="tracking-wide">{t('pending', 'Pending Biometrics')}</span>
               </div>
             )}
           </div>
@@ -239,16 +241,16 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
                   <ScanFace className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-gray-900">Facial Recognition Vector</h4>
+                  <h4 className="font-semibold text-sm text-gray-900">{t('facialVector', 'Facial Recognition Vector')}</h4>
                   <p className="text-xs font-mono text-gray-500">
-                    {hasFace ? '128-pt vector encoded in database' : 'Pending Kiosk Face-API capture'}
+                    {hasFace ? t('facialReady', '128-pt vector encoded in database') : t('facialMissing', 'Pending Kiosk Face-API capture')}
                   </p>
                 </div>
               </div>
               {hasFace ? (
-                <span className="text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-bold">READY</span>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-bold">{t('readyBadge', 'READY')}</span>
               ) : (
-                <span className="text-xs px-2.5 py-1 rounded-full bg-gray-200 text-gray-600">MISSING</span>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-gray-200 text-gray-600">{t('missingBadge', 'MISSING')}</span>
               )}
             </div>
           </div>
@@ -260,16 +262,16 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
                   <Fingerprint className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-gray-900">ESP32 Hardware Fingerprint</h4>
+                  <h4 className="font-semibold text-sm text-gray-900">{t('fingerprintHardware', 'ESP32 Hardware Fingerprint')}</h4>
                   <p className="text-xs font-mono text-gray-500">
-                    {hasFingerprint ? `Hardware ID: ${currentUser.fingerprint_id}` : 'Pending ESP32 biometric scanner'}
+                    {hasFingerprint ? `${t('fingerprintReady', 'Hardware ID')}: ${currentUser.fingerprint_id}` : t('fingerprintMissing', 'Pending ESP32 biometric scanner')}
                   </p>
                 </div>
               </div>
               {hasFingerprint ? (
-                <span className="text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-bold">READY</span>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-bold">{t('readyBadge', 'READY')}</span>
               ) : (
-                <span className="text-xs px-2.5 py-1 rounded-full bg-gray-200 text-gray-600">MISSING</span>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-gray-200 text-gray-600">{t('missingBadge', 'MISSING')}</span>
               )}
             </div>
           </div>
@@ -279,10 +281,10 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
           <div className="mt-6 p-4 rounded-2xl bg-orange-50 border border-orange-200 flex items-start sm:items-center justify-between flex-col sm:flex-row gap-3 relative z-10 text-xs text-orange-800">
             <div className="flex items-center gap-2.5">
               <Info className="w-5 h-5 text-orange-600 flex-shrink-0" />
-              <span>Please visit your local Smart Ration Shop Kiosk to quickly record your facial & fingerprint biometrics.</span>
+              <span>{t('biometricNotice', 'Please visit your local Smart Ration Shop Kiosk to quickly record your facial & fingerprint biometrics.')}</span>
             </div>
             <span className="font-mono font-bold bg-orange-100 px-3 py-1 rounded-lg text-orange-700 flex-shrink-0">
-              Live Auto-Update Enabled
+              {t('liveAutoUpdate', 'Live Auto-Update Enabled')}
             </span>
           </div>
         )}
@@ -297,14 +299,14 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
             </div>
             <div>
               <h3 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
-                <span>Push & In-App Notification Engine</span>
+                <span>{t('notifEngineTitle', 'Push & In-App Notification Engine')}</span>
               </h3>
             </div>
           </div>
           <span className="px-3 py-1 rounded-xl bg-gray-50 text-gray-600 border border-gray-200 text-xs font-mono flex items-center gap-1.5">
-            <span>OS Permissions:</span>
+            <span>{t('osPermissions', 'OS Permissions:')}</span>
             <strong className={notifPermGranted ? 'text-green-600 font-bold' : 'text-orange-500'}>
-              {notifPermGranted ? 'GRANTED (READY)' : 'CLICK TO GRANT'}
+              {notifPermGranted ? t('grantedReady', 'GRANTED (READY)') : t('clickToGrant', 'CLICK TO GRANT')}
             </strong>
           </span>
         </div>
@@ -314,8 +316,8 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
             className="p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-blue-400 transition-all flex flex-col items-center text-center group"
           >
             <ShieldCheck className="w-6 h-6 text-green-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-900">Biometrics Verified Alert</span>
-            <span className="text-[10px] font-mono text-gray-500 mt-0.5">Auth Success</span>
+            <span className="text-xs font-bold text-gray-900">{t('bioAlertBtn', 'Biometrics Verified Alert')}</span>
+            <span className="text-[10px] font-mono text-gray-500 mt-0.5">{t('bioAlertSub', 'Auth Success')}</span>
           </button>
 
           <button
@@ -323,8 +325,8 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
             className="p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-orange-400 transition-all flex flex-col items-center text-center group"
           >
             <PackageCheck className="w-6 h-6 text-orange-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-900">Stock & Price Update</span>
-            <span className="text-[10px] font-mono text-gray-500 mt-0.5">Inventory Sync</span>
+            <span className="text-xs font-bold text-gray-900">{t('stockAlertBtn', 'Stock & Price Update')}</span>
+            <span className="text-[10px] font-mono text-gray-500 mt-0.5">{t('stockAlertSub', 'Inventory Sync')}</span>
           </button>
 
           <button
@@ -332,8 +334,8 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
             className="p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-blue-400 transition-all flex flex-col items-center text-center group"
           >
             <Clock className="w-6 h-6 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-900">Slot Reserved Confirm</span>
-            <span className="text-[10px] font-mono text-gray-500 mt-0.5">Atomic Booking</span>
+            <span className="text-xs font-bold text-gray-900">{t('slotAlertBtn', 'Slot Reserved Confirm')}</span>
+            <span className="text-[10px] font-mono text-gray-500 mt-0.5">{t('slotAlertSub', 'Atomic Booking')}</span>
           </button>
 
           <button
@@ -341,8 +343,8 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
             className="p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-indigo-400 transition-all flex flex-col items-center text-center group"
           >
             <Fingerprint className="w-6 h-6 text-indigo-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold text-gray-900">ESP32 Hardware Trigger</span>
-            <span className="text-[10px] font-mono text-gray-500 mt-0.5">Sensor Signal</span>
+            <span className="text-xs font-bold text-gray-900">{t('hwAlertBtn', 'ESP32 Hardware Trigger')}</span>
+            <span className="text-[10px] font-mono text-gray-500 mt-0.5">{t('hwAlertSub', 'Sensor Signal')}</span>
           </button>
         </div>
       </div>
@@ -354,16 +356,16 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 border border-blue-100">
               <Clock className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Reserve Distribution Slot</h3>
+            <h3 className="text-lg font-bold text-gray-900">{t('reserveSlotTitle', 'Reserve Distribution Slot')}</h3>
             <p className="text-sm text-gray-500 mt-1">
-              Book a guaranteed distribution pickup slot using our real-time reservation protocol to avoid wait times.
+              {t('reserveSlotDesc', 'Book a guaranteed distribution pickup slot using our real-time reservation protocol to avoid wait times.')}
             </p>
           </div>
           <button
             onClick={onNavigateToBookings}
             className="mt-6 w-full py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
           >
-            <span>Book Next Pickup Slot</span>
+            <span>{t('bookNextSlotBtn', 'Book Next Pickup Slot')}</span>
             <ExternalLink className="w-4 h-4" />
           </button>
         </div>
@@ -375,22 +377,19 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
               <div className="w-8 h-8 rounded-lg bg-gray-50 text-green-600 flex items-center justify-center border border-gray-100">
                 <PackageCheck className="w-4 h-4" />
               </div>
-              <h3 className="font-bold text-gray-900 text-sm">Last Month's History</h3>
+              <h3 className="font-bold text-gray-900 text-sm">{t('lastMonthHistory', "Last Month's History")}</h3>
             </div>
-            <span className="text-xs font-mono text-gray-500">Audit Log</span>
+            <span className="text-xs font-mono text-gray-500">{t('auditLog', 'Audit Log')}</span>
           </div>
 
           <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
             {recentClaims.length === 0 ? (
-              <p className="text-xs text-gray-500 italic py-4 text-center">No past claim logs recorded yet.</p>
+              <p className="text-xs text-gray-500 italic py-4 text-center">{t('noPastLogs', 'No past claim logs recorded yet.')}</p>
             ) : (
               recentClaims.map((claim) => (
                 <div key={claim.id} className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between">
                   <div>
-                    <div className="font-semibold text-xs text-gray-900 font-mono">
-                      {claim.id}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className="font-semibold text-xs text-gray-900">
                       {(() => {
                         let items = claim.items_claimed || claim.items;
                         if (typeof items === 'string') {
@@ -399,13 +398,16 @@ export default function Dashboard({ user, onUserUpdated, onNavigateToBookings })
                         if (Array.isArray(items)) {
                           return items.map(item => `${item.quantity} ${item.unit} ${item.item_name}`).join(' • ');
                         }
-                        return 'Standard Commodity Quota';
+                        return t('standardQuota', 'Standard Commodity Quota');
                       })()}
+                    </div>
+                    <div className="text-[11px] text-gray-500 mt-0.5">
+                      {t('dispensedViaKiosk', 'Dispensed via Smart Kiosk')}
                     </div>
                   </div>
                   <div className="text-right">
                     <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-green-100 text-green-700 border border-green-200">
-                      CLAIMED
+                      {t('claimedBadge', 'CLAIMED')}
                     </span>
                     <div className="text-[11px] text-gray-500 font-mono mt-1">
                       {new Date(claim.slot_time || claim.claimed_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: '2-digit' })}

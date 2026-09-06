@@ -7,20 +7,24 @@ import SlotBooking from './components/SlotBooking';
 import NotificationToast from './components/NotificationToast';
 import { notificationService } from './lib/notificationService';
 import { supabase } from './lib/supabaseClient';
-import { ShieldCheck, LayoutDashboard, Package, Calendar, LogOut, Smartphone, User } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, Package, Calendar, LogOut, Smartphone, User, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
-export default function App() {
+function MainApp() {
+  const { language, setLanguage, languages, t } = useLanguage();
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('smart_ration_active_user');
     return saved ? JSON.parse(saved) : null;
   });
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [languageSelected, setLanguageSelected] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [languageSelected, setLanguageSelected] = useState(() => {
+    return Boolean(localStorage.getItem('smart_ration_language'));
+  });
 
-  // Global subscriber for Supabase WebSockets & local BroadcastChannel to ensure alerts fire across all ports and tabs
+  // Global subscriber for Supabase WebSockets & local BroadcastChannel
   useEffect(() => {
-    // 1. Supabase WebSocket Broadcasts (Bypasses port differences 5174 vs 5173!)
     const channel = supabase.channel('smart-ration-global')
       .on('broadcast', { event: 'INVENTORY_UPDATE' }, (data) => {
         const payload = data.payload;
@@ -28,8 +32,8 @@ export default function App() {
           const isZero = parseFloat(payload.quantity_available) === 0;
           notificationService.sendAlert({
             type: 'inventory',
-            title: isZero ? `⚠️ Out of Stock Notice: ${payload.item_name}` : `🌾 Live Stock Replenished: ${payload.item_name}`,
-            body: isZero ? `Attention citizens: ${payload.item_name} is currently out of stock at your fair price distribution depot.` : `Shop admin updated commodity stock to ${payload.quantity_available} ${payload.unit || 'kg'} at fair price shop!`
+            title: isZero ? `⚠️ Out of Stock: ${payload.item_name}` : `🌾 Stock Replenished: ${payload.item_name}`,
+            body: isZero ? `${payload.item_name} is currently out of stock.` : `Stock updated to ${payload.quantity_available} ${payload.unit || 'kg'}.`
           });
         }
       })
@@ -38,8 +42,8 @@ export default function App() {
         if (payload) {
           notificationService.sendAlert({
             type: 'inventory',
-            title: `✨ New Subsidized Commodity Added!`,
-            body: `Fair Price Shop now offers "${payload.item_name}" at ₹${Number(payload.unit_price).toFixed(2)} per ${payload.unit || 'unit'}. Check Shop Stock to reserve!`
+            title: `✨ New Commodity Added!`,
+            body: `Now offering "${payload.item_name}" at ₹${Number(payload.unit_price).toFixed(2)}/${payload.unit || 'unit'}.`
           });
         }
       })
@@ -48,39 +52,15 @@ export default function App() {
         if (payload) {
           notificationService.sendAlert({
             type: 'biometric',
-            title: `🛡️ Facial Biometrics Verified!`,
-            body: `Ration Card ${payload.ration_id || 'ID'} verified via 128-pt neural face encoding. Your monthly allotment is authorized for dispensing!`
+            title: `🛡️ Biometrics Verified!`,
+            body: `Ration Card ${payload.ration_id || 'ID'} verified via 128-pt neural face encoding.`
           });
         }
       })
       .subscribe();
 
-    // 2. Same-Origin Local Bus Backup
-    let bus = null;
-    if (typeof window !== 'undefined' && ('BroadcastChannel' in window)) {
-      bus = new BroadcastChannel('smart_ration_sync_bus');
-      bus.onmessage = (event) => {
-        const { event: type, payload } = event.data || {};
-        if (type === 'INVENTORY_UPDATE' && payload) {
-          const isZero = parseFloat(payload.quantity_available) === 0;
-          notificationService.sendAlert({
-            type: 'inventory',
-            title: isZero ? `⚠️ Out of Stock Notice: ${payload.item_name}` : `🌾 Live Stock Replenished: ${payload.item_name}`,
-            body: isZero ? `Attention citizens: ${payload.item_name} is currently out of stock at your fair price distribution depot.` : `Shop admin updated commodity stock to ${payload.quantity_available} ${payload.unit || 'kg'} at fair price shop!`
-          });
-        } else if (type === 'INVENTORY_ADD' && payload) {
-          notificationService.sendAlert({
-            type: 'inventory',
-            title: `✨ New Subsidized Commodity Added!`,
-            body: `Fair Price Shop now offers "${payload.item_name}" at ₹${Number(payload.unit_price).toFixed(2)} per ${payload.unit || 'unit'}. Check Shop Stock to reserve!`
-          });
-        }
-      };
-    }
-
     return () => {
       supabase.removeChannel(channel);
-      if (bus) bus.close();
     };
   }, []);
 
@@ -99,7 +79,14 @@ export default function App() {
 
   if (!currentUser) {
     if (!languageSelected) {
-      return <LanguageSelectionScreen onLanguageSelect={(lang) => setLanguageSelected(true)} />;
+      return (
+        <LanguageSelectionScreen
+          onLanguageSelect={(lang) => {
+            setLanguage(lang);
+            setLanguageSelected(true);
+          }}
+        />
+      );
     }
     return (
       <>
@@ -111,7 +98,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen pb-20 sm:pb-12 relative z-0">
-      {/* Animated Deep Glassmorphism Background */}
+      {/* Animated Background */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none bg-gray-50">
         <motion.div
           className="absolute top-[-20%] left-[-20%] w-[70vw] h-[70vw] rounded-full bg-blue-500/15 blur-[100px]"
@@ -126,6 +113,7 @@ export default function App() {
       </div>
 
       <NotificationToast />
+
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-gray-200 px-4 sm:px-8 py-3.5 transition-all shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -135,12 +123,22 @@ export default function App() {
             </div>
             <div>
               <h1 className="font-extrabold text-base sm:text-lg text-gray-900 tracking-tight">
-                Smart Ration App
+                {t('appName', 'Smart Ration App')}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-4">
+            {/* Language Switcher Button */}
+            <button
+              onClick={() => setShowLanguageModal(true)}
+              className="px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-blue-700 border border-gray-200 transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm"
+              title={t('changeLanguage', 'Change Language')}
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-600" />
+              <span>{languages.find(l => l.id === language)?.native || 'English'}</span>
+            </button>
+
             <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 shadow-sm">
               <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
                 <User className="w-3.5 h-3.5" />
@@ -155,11 +153,51 @@ export default function App() {
               title="Sign out of digital card"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Sign Out</span>
+              <span className="hidden md:inline">{t('signOut', 'Sign Out')}</span>
             </button>
           </div>
         </div>
       </header>
+
+      {/* Language Switcher Modal */}
+      {showLanguageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-200 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2 text-gray-900 font-bold">
+                <Globe className="w-5 h-5 text-blue-600" />
+                <span>{t('selectLanguage', 'Select Language')}</span>
+              </div>
+              <button
+                onClick={() => setShowLanguageModal(false)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 max-h-72 overflow-y-auto">
+              {languages.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setLanguage(item.id);
+                    setShowLanguageModal(false);
+                  }}
+                  className={`px-4 py-3 rounded-xl flex items-center justify-between transition-all text-left ${
+                    language === item.id
+                      ? 'bg-blue-50 border border-blue-300 text-blue-800 font-bold'
+                      : 'hover:bg-gray-50 border border-transparent text-gray-700'
+                  }`}
+                >
+                  <span className="text-base">{item.native}</span>
+                  <span className="text-xs text-gray-500 font-medium">{item.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <main className="max-w-6xl mx-auto px-4 sm:px-8 mt-6 relative overflow-x-hidden pb-10">
@@ -185,7 +223,7 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Floating Navigation Tabs (Optimized for Mobile Web App Experience) */}
+      {/* Bottom Floating Navigation Tabs */}
       <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur-xl border border-gray-200 shadow-xl rounded-2xl p-1.5 flex items-center gap-2 w-full max-w-sm px-3">
         <button
           onClick={() => setActiveTab('dashboard')}
@@ -193,7 +231,7 @@ export default function App() {
             }`}
         >
           <LayoutDashboard className="w-4 h-4" />
-          <span>My Card</span>
+          <span>{t('myCard', 'My Card')}</span>
         </button>
 
         <button
@@ -202,7 +240,7 @@ export default function App() {
             }`}
         >
           <Package className="w-4 h-4" />
-          <span>Shop Stock</span>
+          <span>{t('shopStock', 'Shop Stock')}</span>
         </button>
 
         <button
@@ -211,9 +249,18 @@ export default function App() {
             }`}
         >
           <Calendar className="w-4 h-4" />
-          <span>Slots</span>
+          <span>{t('slots', 'Slots')}</span>
         </button>
       </nav>
     </div>
   );
 }
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <MainApp />
+    </LanguageProvider>
+  );
+}
+

@@ -3,8 +3,10 @@ import { supabase } from '../lib/supabaseClient';
 import FaceLoginModal from './FaceLoginModal';
 import { UserPlus, LogIn, ShieldCheck, AlertCircle, Loader2, Sparkles, Scan } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function RegistrationForm({ onUserLogin }) {
+  const { t } = useLanguage();
   const [isRegistering, setIsRegistering] = useState(true);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -231,11 +233,9 @@ export default function RegistrationForm({ onUserLogin }) {
 
           <div className="text-center mb-6 relative z-10">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
-              Smart Ration Portal
+              {t('loginTitle', 'Smart Ration Portal')}
             </h1>
           </div>
-
-          {/* Removed global biometric login button - moved to 1-to-1 verification flow */}
 
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-blue-600/10 border border-blue-600/30 flex items-start gap-3 text-blue-800 text-sm">
@@ -286,13 +286,13 @@ export default function RegistrationForm({ onUserLogin }) {
             <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">
-                  Ration Card ID
+                  {t('cardIdOrPhone', 'Ration Card ID')}
                 </label>
                 <input
                   type="text"
                   required
                   maxLength={12}
-                  placeholder="e.g. 123456789012"
+                  placeholder={t('cardIdPlaceholder', 'e.g. 123456789012')}
                   value={rationId}
                   onChange={(e) => setRationId(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                   className="w-full px-4 py-3 rounded-xl bg-white/60 border border-white/60 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-gray-900 placeholder-gray-500 font-mono transition-all outline-none backdrop-blur-sm"
@@ -355,7 +355,7 @@ export default function RegistrationForm({ onUserLogin }) {
                 ) : (
                   <>
                     <LogIn className="w-5 h-5 transition-transform group-hover:scale-110" />
-                    <span>Access Digital Card</span>
+                    <span>{t('enterPortal', 'Access Digital Card')}</span>
                   </>
                 )}
               </button>

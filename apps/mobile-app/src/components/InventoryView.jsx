@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { notificationService } from '../lib/notificationService';
 import { Package, RefreshCw, ShieldAlert, Sparkles, TrendingDown, ArrowUpRight } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function InventoryView({ user }) {
+  const { t } = useLanguage();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,7 +45,7 @@ export default function InventoryView({ user }) {
   useEffect(() => {
     fetchInventory();
 
-    // 1. Subscribe to Supabase WebSocket Broadcast channel (Works across different ports & machines instantly!)
+    // 1. Subscribe to Supabase WebSocket Broadcast channel
     const broadcastChannel = supabase.channel('smart-ration-global')
       .on('broadcast', { event: 'INVENTORY_UPDATE' }, (payload) => {
         const item = payload.payload;
@@ -103,7 +105,7 @@ export default function InventoryView({ user }) {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2.5">
             <Package className="w-7 h-7 text-blue-600" />
-            <span>Available Ration Inventory</span>
+            <span>{t('shopStockTitle', 'Available Ration Inventory')}</span>
           </h2>
         </div>
         <button
@@ -112,7 +114,7 @@ export default function InventoryView({ user }) {
           className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold self-start sm:self-center text-xs py-2 px-4 rounded-xl flex items-center gap-2 transition-colors border border-gray-200"
         >
           <RefreshCw className={`w-4 h-4 text-blue-600 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Stock</span>
+          <span>{t('syncBtn', 'Refresh Stock')}</span>
         </button>
       </div>
 
@@ -128,7 +130,7 @@ export default function InventoryView({ user }) {
           const qty = parseFloat(item.quantity_available);
           const isOut = qty <= 0;
           const isLow = !isOut && qty < 50;
-          const stockStatus = isOut ? 'Out of Stock' : (isLow ? 'Low Stock' : 'In Stock');
+          const stockStatus = isOut ? t('outOfStock', 'Out of Stock') : (isLow ? t('lowStock', 'Low Stock') : t('inStock', 'In Stock'));
           const badgeColor = isOut
             ? 'bg-red-50 text-red-600 border border-red-200 animate-pulse'
             : (isLow ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-green-50 text-green-700 border border-green-200');
@@ -160,7 +162,7 @@ export default function InventoryView({ user }) {
                     {item.unit}
                   </span>
                   <div className="text-xs text-gray-500 mt-0.5 font-mono">
-                    Remaining Shop Capacity
+                    {t('availableStock', 'Remaining Shop Capacity')}
                   </div>
                 </div>
 
@@ -168,9 +170,9 @@ export default function InventoryView({ user }) {
                   <span className="text-2xl font-bold text-gray-900 font-mono">
                     ₹{Number(item.unit_price).toFixed(2)}
                   </span>
-                  <span className="text-xs text-gray-500 block">per {item.unit}</span>
+                  <span className="text-xs text-gray-500 block">{t('perUnit', 'per')} {item.unit}</span>
                   <div className="text-[11px] text-green-600 font-semibold flex items-center justify-end gap-0.5 mt-0.5">
-                    <span>Govt Subsidized</span>
+                    <span>{t('subsidizedPrice', 'Govt Subsidized')}</span>
                     <ArrowUpRight className="w-3 h-3" />
                   </div>
                 </div>
@@ -182,3 +184,4 @@ export default function InventoryView({ user }) {
     </div>
   );
 }
+

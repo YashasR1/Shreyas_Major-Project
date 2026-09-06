@@ -408,13 +408,12 @@ export default function FaceLookupModal({ isOpen, onClose, onUserFound }) {
                     try {
                       fetch(`http://${cleanIp}/test_servo`, { method: 'GET', mode: 'no-cors' });
                       alert(`✅ Signal sent to http://${cleanIp}/test_servo! Check ESP32 valve.`);
-                    } catch(err) {
+                    } catch (err) {
                       alert('Failed to send signal: ' + err.message);
                     }
                   }}
                   className="px-2.5 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-[11px] transition-colors"
                 >
-                  Test Valve (0°→90°→0°)
                 </button>
               </div>
             </div>
