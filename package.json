@@ -5,8 +5,10 @@
     "apps/*"
   ],
   "scripts": {
+    "dev": "npm --workspace=apps/kiosk-app run dev",
     "build": "npm --workspace=apps/kiosk-app run build",
     "build:kiosk": "npm --workspace=apps/kiosk-app run build",
+    "preview:kiosk": "npm --workspace=apps/kiosk-app run preview",
     "dev:mobile": "npm --workspace=apps/mobile-app run dev",
     "dev:kiosk": "npm --workspace=apps/kiosk-app run dev",
     "test:mobile": "npm --workspace=apps/mobile-app run test"

@@ -71,26 +71,29 @@ export default function AdminInventory() {
     if (isNaN(targetQty)) return;
 
     setStatusMsg('');
+    const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
     try {
       const updatedItem = { ...item, quantity_available: targetQty, updated_at: new Date().toISOString() };
 
-      // Execute Postgres update
-      await supabase
-        .from('inventory')
-        .update({ quantity_available: targetQty, updated_at: updatedItem.updated_at })
-        .eq('item_name', item.item_name);
+      if (!isDemoMode) {
+        // Execute Postgres update
+        await supabase
+          .from('inventory')
+          .update({ quantity_available: targetQty, updated_at: updatedItem.updated_at })
+          .eq('item_name', item.item_name);
 
-      // Execute universal broadcast
-      broadcastChange('INVENTORY_UPDATE', updatedItem);
+        // Execute universal broadcast
+        broadcastChange('INVENTORY_UPDATE', updatedItem);
+      }
 
       // Update local state and give immediate visual feedback
       setInventory((prev) => prev.map((i) => i.id === item.id ? updatedItem : i));
       setEditingId(null);
 
       if (targetQty === 0) {
-        setStatusMsg(`⚠️ "${item.item_name}" marked OUT OF STOCK! Zero stock alert broadcasted to all citizens.`);
+        setStatusMsg(`⚠️ "${item.item_name}" marked OUT OF STOCK! ${isDemoMode ? '(Demo Mode simulated)' : 'Zero stock alert broadcasted.'}`);
       } else {
-        setStatusMsg(`⚡ Live stock for "${item.item_name}" updated to ${targetQty} ${item.unit}! Realtime push dispatched.`);
+        setStatusMsg(`⚡ Live stock for "${item.item_name}" updated to ${targetQty} ${item.unit}! ${isDemoMode ? '(Demo Mode: simulated locally to preserve DB)' : 'Realtime push dispatched.'}`);
       }
       setTimeout(() => setStatusMsg(''), 5000);
     } catch (err) {
@@ -103,15 +106,17 @@ export default function AdminInventory() {
     if (!window.confirm(`Are you sure you want to completely delete "${name}" from the inventory?`)) return;
 
     setStatusMsg('');
+    const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
     try {
-      await supabase.from('inventory').delete().eq('id', id);
+      if (!isDemoMode) {
+        await supabase.from('inventory').delete().eq('id', id);
+        broadcastChange('INVENTORY_DELETE', { id, item_name: name });
+      }
       
       setInventory((prev) => prev.filter((i) => i.id !== id));
       
-      setStatusMsg(`🗑️ Successfully deleted commodity: "${name}"`);
+      setStatusMsg(`🗑️ Successfully deleted commodity: "${name}" ${isDemoMode ? '(Demo Mode simulated)' : ''}`);
       setTimeout(() => setStatusMsg(''), 5000);
-      
-      broadcastChange('INVENTORY_DELETE', { id, item_name: name });
     } catch (err) {
       console.error(err);
       setStatusMsg('Failed to delete item: ' + err.message);
@@ -127,6 +132,7 @@ export default function AdminInventory() {
 
     setAddingItem(true);
     setStatusMsg('');
+    const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
     try {
       const tempId = `inv-${Date.now()}`;
       const newItem = {
@@ -138,25 +144,26 @@ export default function AdminInventory() {
         updated_at: new Date().toISOString()
       };
 
-      // Try inserting into Supabase
-      const { data, error } = await supabase.from('inventory').insert([{
-        item_name: newItem.item_name,
-        quantity_available: newItem.quantity_available,
-        unit: newItem.unit,
-        unit_price: newItem.unit_price
-      }]).select();
+      let finalItem = newItem;
+      if (!isDemoMode) {
+        // Try inserting into Supabase
+        const { data } = await supabase.from('inventory').insert([{
+          item_name: newItem.item_name,
+          quantity_available: newItem.quantity_available,
+          unit: newItem.unit,
+          unit_price: newItem.unit_price
+        }]).select();
 
-      const finalItem = (data && data.length > 0) ? data[0] : newItem;
-
-      // Execute universal broadcast for new addition
-      broadcastChange('INVENTORY_ADD', finalItem);
+        finalItem = (data && data.length > 0) ? data[0] : newItem;
+        broadcastChange('INVENTORY_ADD', finalItem);
+      }
 
       setInventory((prev) => [...prev, finalItem]);
       setShowAddForm(false);
       setNewItemName('');
       setNewQty('200');
       setNewPrice('10.00');
-      setStatusMsg(`✨ Successfully registered new commodity: "${finalItem.item_name}"! Alert sent to all mobile apps.`);
+      setStatusMsg(`✨ Successfully registered new commodity: "${finalItem.item_name}"! ${isDemoMode ? '(Demo Mode simulated)' : 'Alert sent to all mobile apps.'}`);
       setTimeout(() => setStatusMsg(''), 5000);
     } catch (err) {
       console.error(err);

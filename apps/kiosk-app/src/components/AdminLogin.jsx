@@ -71,6 +71,31 @@ export default function AdminLogin({ onLogin }) {
           <p className="text-sm text-gray-500 mt-2 font-medium">
             Enter credentials to access
           </p>
+
+          {/* Quick Demo Access Callout */}
+          <div className="mt-4 p-3 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-left">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                Portfolio Evaluator Access
+              </span>
+              <span className="text-[11px] font-mono text-gray-500">Demo Mode</span>
+            </div>
+            <p className="text-xs text-gray-600 mb-2.5">
+              Testing without credentials? Click below to instantly log in as Administrator.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername('admin');
+                setPassword('admin123');
+                setTimeout(() => onLogin(true), 200);
+              }}
+              className="w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>1-Click Demo Sign In (admin / admin123)</span>
+            </button>
+          </div>
         </div>
 
         {error && (

@@ -1,8 +1,14 @@
 [build]
-  command = "npm --workspace=apps/kiosk-app run build"
+  command = "cd apps/kiosk-app && npm install && npm run build"
   publish = "apps/kiosk-app/dist"
 
+[build.environment]
+  VITE_DEMO_MODE = "true"
+  NODE_VERSION    = "20"
+
+# SPA redirect — all routes → index.html
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from   = "/*"
+  to     = "/index.html"
   status = 200
+
