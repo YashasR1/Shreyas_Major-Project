@@ -4,7 +4,7 @@
 [![Hardware: ESP32](https://img.shields.io/badge/Hardware-ESP32-E7352C?logo=espressif)](https://www.espressif.com/en/products/socs/esp32)
 [![Sensors: RFID & LoadCell](https://img.shields.io/badge/Sensors-RC522_%7C_HX711-2563EB)](https://github.com/buildprojecthq/smart-ration-dispenser)
 [![Database: Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?logo=supabase)](https://supabase.com/)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-smart--ration--demo.netlify.app-00C7B7?logo=netlify&logoColor=white)](https://smart-ration-demo.netlify.app/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-majorprojectsmartration.netlify.app-00C7B7?logo=netlify&logoColor=white)](https://majorprojectsmartration.netlify.app/)
 
 **Digitalize Ration** is an automated, tamper-proof grain distribution platform developed to eliminate leakage, ghost cards, and weighing manipulation in the Public Distribution System (PDS). Integrating Aadhaar-linked RFID cards, client-side neural face verification, closed-loop strain gauge load cell cutoffs, and a cloud-synchronized ledger, it transforms manual ration depots into autonomous, fair-price distribution kiosks.
 
@@ -14,10 +14,10 @@
 
 > **Try the interactive Kiosk & Admin demo — no physical hardware required.**
 > 
-> **[https://smart-ration-demo.netlify.app/](https://smart-ration-demo.netlify.app/)**
+> **[https://majorprojectsmartration.netlify.app/](https://majorprojectsmartration.netlify.app/)**
 > 
 > **Evaluation Instructions:**
-> 1. Click **"1-Click Demo Sign In"** on the login screen (or sign in with `admin` / `admin123`).
+> 1. Click **"1-Click Demo Sign In"** on the portal landing screen to instantly access the dashboard (or use the evaluation account: `admin` / `admin123`).
 > 2. **Beneficiary Lookup:** Search by Ration Card ID (e.g., `RC-KA-58291`) or tap **"Scan Face to Authenticate"** using your webcam with client-side `@vladmandic/face-api`.
 > 3. **Hardware Simulation:** Use the built-in **ESP32 Testing Suite** to simulate hardware scan completions and quota dispense signals without requiring physical microcontrollers.
 > 4. **Inventory Admin:** Switch to the **Inventory Admin** tab to monitor live stock and commodity prices with built-in sandbox write protection.
