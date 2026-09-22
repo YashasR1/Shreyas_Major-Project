@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Hardware: ESP32](https://img.shields.io/badge/Hardware-ESP32-E7352C?logo=espressif)](https://www.espressif.com/en/products/socs/esp32)
-[![Sensors: RFID & LoadCell](https://img.shields.io/badge/Sensors-RC522_%7C_HX711-2563EB)](https://github.com/buildprojecthq/smart-ration-dispenser)
+[![Sensors: RFID & LoadCell](https://img.shields.io/badge/Sensors-RC522_%7C_HX711-2563EB)](https://github.com/buildprojecthq/Shreyas_Major-Project)
 [![Database: Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?logo=supabase)](https://supabase.com/)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-majorprojectsmartration.netlify.app-00C7B7?logo=netlify&logoColor=white)](https://majorprojectsmartration.netlify.app/)
 
